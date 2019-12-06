@@ -28,7 +28,8 @@ router.register(r'buildings', BuildingViewSet)
 
 urlpatterns = [
     path('api/v1/', include('api.urls')),  # This is the legacy API
-    path('api/v2/', include(router.urls)),
+    # path('api/v2/', include(router.urls)),
+    path('api/', include('api.urls')),
     path('jet/', include('jet.urls', 'jet')),
     path('admin/', admin.site.urls),
     path('account/', include('account.urls')),

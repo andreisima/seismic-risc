@@ -1,7 +1,11 @@
 from enum import Enum
 
-from django.db import models
+# from django.db import models
 from import_export import resources
+
+from django.contrib.gis.db import models
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import Distance
 
 
 class SectorChoice(Enum):
@@ -21,32 +25,100 @@ class SeismicCategoryChoice(Enum):
     # TODO Implement this and replace in model
 
 
+class BuildingManager(models.Manager):
+
+    def find_by_point(self, lat, lng, radius):
+        user_point = Point(lng, lat)
+        qs = self.filter(location__distance_lte=(user_point, Distance(km=radius)))
+
+        return qs
+
+
 class Building(models.Model):
-    general_id = models.AutoField(primary_key=True)
 
-    risk_category = models.CharField(max_length=50, db_index=True)
-    registration_number = models.IntegerField(null=True)
-    examination_year = models.IntegerField(null=True)
-    certified_expert = models.CharField(max_length=100, null=True)
-    observations = models.CharField(max_length=1000, null=True)
+    objects = BuildingManager()
 
-    lat = models.FloatField(null=True)
-    lng = models.FloatField(null=True)
+    general_id = models.AutoField(
+        primary_key=True
+    )
 
-    county = models.CharField(max_length=60)
-    address = models.CharField(max_length=250, null=True)
-    post_code = models.CharField(max_length=250)
-    locality = models.CharField(max_length=20)
+    risk_category = models.CharField(
+        max_length=50,
+        db_index=True
+    )
+    registration_number = models.IntegerField(
+        null=True
+    )
+    examination_year = models.IntegerField(
+        null=True
+    )
+    certified_expert = models.CharField(
+        max_length=100,
+        null=True
+    )
+    observations = models.CharField(
+        max_length=1000,
+        null=True
+    )
 
-    year_built = models.IntegerField(null=True)
-    height_regime = models.CharField(max_length=50, null=True)
-    apartment_count = models.IntegerField(null=True)
-    surface = models.FloatField(null=True)
+    # this will need to be modified as a GIS field
+    # Reffer to geo Django for details
+    lat = models.FloatField(
+        null=True
+    )
+    lng = models.FloatField(
+        null=True
+    )
 
-    cadastre_number = models.IntegerField(null=True)
-    land_registry_number = models.CharField(max_length=50, null=True)
-    administration_update = models.DateField(null=True, blank=True)
-    admin_update = models.DateField(null=True, blank=True)
+    location = models.PointField(
+        srid=4326,
+        null=True,
+        blank=True
+    )
+
+    county = models.CharField(
+        max_length=60
+    )
+    address = models.CharField(
+        max_length=250,
+        null=True
+    )
+    post_code = models.CharField(
+        max_length=250
+    )
+    locality = models.CharField(
+        max_length=20
+    )
+
+    year_built = models.IntegerField(
+        null=True
+    )
+    height_regime = models.CharField(
+        max_length=50,
+        null=True
+    )
+    apartment_count = models.IntegerField(
+        null=True
+    )
+    surface = models.FloatField(
+        null=True
+    )
+
+    cadastre_number = models.IntegerField(
+        null=True
+    )
+    land_registry_number = models.CharField(
+        max_length=50,
+        null=True
+    )
+    administration_update = models.DateField(
+        null=True,
+        blank=True
+    )
+    admin_update = models.DateField(
+        null=True,
+        blank=True
+    )
 
     status = models.SmallIntegerField(
         default=0, choices=BUILDING_STATUS_CHOICES, db_index=True
@@ -54,6 +126,10 @@ class Building(models.Model):
 
     def __str__(self):
         return self.address
+
+    def save(self, *args, **kwargs):
+        self.location = Point(self.lng, self.lat)
+        super(Building, self).save(*args, **kwargs)
 
 
 class BuildingResource(resources.ModelResource):
@@ -90,4 +166,3 @@ class CsvFile(models.Model):
 
     def __str__(self):
         return self.name
-

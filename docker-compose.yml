@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+ postgres:
+    image: postgres:12.1
+    restart: always
+    build:
+      context: .
+    container_name: postgres-dev
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data/
+    command: >
+      bash -c "
+      apt-get update -y &&
+      apt-get upgrade -y &&
+      apt-get install postgis vim -y &&
+      docker-entrypoint.sh -c 'shared_buffers=256MB' -c 'max_connections=200'"
+    ports:
+      - 5432:5432
+
+

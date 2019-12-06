@@ -1,8 +1,8 @@
 from django.urls import path
-from . import views
+from api import views
 
 urlpatterns = [
-    # post views
-    path('building/<int:id>/', views.building, name='building'),
-    path('buildings', views.buildings, name='buildings'),
+    path('building/', views.BuildingView.as_view()),
+
 ]
+# path('crumb/<str:uuid>/', view.YourView.as_view()),
