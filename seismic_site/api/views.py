@@ -21,7 +21,7 @@ class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
 
 
-class BuildingFilter(DjangoFilterBackend):
+class BuildingFilterBackend(DjangoFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         filter_class = self.get_filter_class(view, queryset)
@@ -40,15 +40,16 @@ class BuildingView(APIView, PaginationHandlerMixin):
 
     serializer_class = BuildingSerializer
     pagination_class = BasicPagination
-    filter_fields = (
-        'risk_category',
-        'registration_number',
-    )
+    filter_fields = {
+        'risk_category': ['exact', ],
+        'registration_number': ['exact', ],
+        'certified_expert': ['icontains', ],
+    }
 
     def get(self, request, format=None):
         queryset = Building.objects.all()
 
-        fqs = BuildingFilter()
+        fqs = BuildingFilterBackend()
 
         filtered_queryset = fqs.filter_queryset(request, queryset, self)
 
